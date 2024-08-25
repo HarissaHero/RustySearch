@@ -1,7 +1,6 @@
-use crate::context::Word;
 use crate::occurence::Occurence;
 
-pub fn search_word(word: Word, file_content: &str) -> Vec<Occurence> {
+pub fn search_word(word: &str, file_content: &str) -> Vec<Occurence> {
     let mut occurences = vec![];
     for (line_number, line) in file_content.lines().enumerate() {
         let line_words: Vec<&str> = line.split_whitespace().collect();

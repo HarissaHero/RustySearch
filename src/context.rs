@@ -1,20 +1,20 @@
 use std::{fs, path::Path};
 
-pub type Word<'a> = &'a str;
+pub type Word = String;
 pub type File = String;
 
-pub struct Context<'a> {
-    word: Word<'a>,
+pub struct Context {
+    word: Word,
     file: File,
 }
 
-impl<'a> Context<'a> {
-    fn new(word: Word<'a>, file: File) -> Self {
+impl Context {
+    fn new(word: Word, file: File) -> Self {
         Self { word, file }
     }
 
-    pub fn word(&self) -> Word<'a> {
-        self.word
+    pub fn word(&self) -> &str {
+        &self.word
     }
 
     pub fn file(&self) -> &str {
@@ -39,7 +39,7 @@ pub fn build_context(args: Vec<&str>) -> Vec<Context> {
         match current_arg {
             "-f" | "--file" => {
                 let file = args.next().unwrap();
-                let context = Context::new(word, file.to_string());
+                let context = Context::new(word.to_string(), file.to_string());
                 context.validate();
                 contexts.push(context);
             }
@@ -52,7 +52,7 @@ pub fn build_context(args: Vec<&str>) -> Vec<Context> {
                         let path = entry.path();
                         if path.is_file() {
                             let file = path.to_str().unwrap();
-                            let context = Context::new(word, file.to_string());
+                            let context = Context::new(word.to_string(), file.to_string());
                             context.validate();
                             contexts.push(context);
                         }
