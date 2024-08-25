@@ -39,12 +39,12 @@ impl Display for Occurence {
 
 pub fn display_results(context: Context, occurences: Vec<Occurence>) {
     println!(
-        "found {} occurences of {} in {}",
+        " - {}: {} times",
+        context.file(),
         occurences.len(),
-        context.word(),
-        context.file()
     );
     for occurence in occurences {
-        println!("{}", occurence);
+        println!("   {}", occurence);
     }
+    println!()
 }
