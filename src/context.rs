@@ -110,11 +110,26 @@ fn test_check_args_invalid_file() {
 fn test_check_args_directory() {
     let args = vec!["target/debug/rustysearch", "word", "-d", "./test/"];
     let result = build_context(args);
+
     assert_eq!(result.len(), 3);
-    assert_eq!(result[0].word(), "word");
-    assert_eq!(result[0].file(), "./test/another-file.txt");
-    assert_eq!(result[1].word(), "word");
-    assert_eq!(result[1].file(), "./test/poem.txt");
-    assert_eq!(result[2].word(), "word");
-    assert_eq!(result[2].file(), "./test/readme-test.txt");
+
+    let another_file = result
+        .iter()
+        .find(|context| context.file() == "./test/another-file.txt")
+        .unwrap();
+    let poem = result
+        .iter()
+        .find(|context| context.file() == "./test/poem.txt")
+        .unwrap();
+    let readme_test = result
+        .iter()
+        .find(|context| context.file() == "./test/readme-test.txt")
+        .unwrap();
+
+    assert_eq!(another_file.word(), "word");
+    assert_eq!(another_file.file(), "./test/another-file.txt");
+    assert_eq!(poem.word(), "word");
+    assert_eq!(poem.file(), "./test/poem.txt");
+    assert_eq!(readme_test.word(), "word");
+    assert_eq!(readme_test.file(), "./test/readme-test.txt");
 }
