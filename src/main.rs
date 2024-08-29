@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use rustysearch::{
     args::extract_and_process_args, context::build_context, occurence::display_results,
     search::search_word,
@@ -15,18 +17,37 @@ fn main() {
 
     let mut threads = vec![];
 
-    for context in contexts {
+    let contexts_mutex = Arc::new(Mutex::new(contexts));
+
+    for _ in 0..extracted_arguments.num_threads {
+        let mutex = contexts_mutex.clone();
         let thread = std::thread::spawn(move || {
-            let file_content = std::fs::read_to_string(context.file()).unwrap();
-            let occurences = search_word(context.word(), &file_content);
-            (context, occurences)
+            let mut results = vec![];
+            loop {
+                let mut contexts = mutex.lock().unwrap();
+                match contexts.pop() {
+                    Some(context) => {
+                        let context_clone = context.clone();
+                        drop(contexts);
+                        let file_content = std::fs::read_to_string(context_clone.file()).unwrap();
+                        let occurences = search_word(context.word(), &file_content);
+                        results.push((context_clone, occurences));
+                    }
+                    None => {
+                        break;
+                    }
+                };
+            }
+            results
         });
         threads.push(thread);
     }
 
     for thread in threads {
-        let (context, occurences) = thread.join().unwrap();
-        display_results(context, occurences);
+        let results = thread.join().unwrap();
+        for (context, occurences) in results {
+            display_results(context, occurences);
+        }
     }
 
     println!("Elapsed time: {:?}", timestamp.elapsed());

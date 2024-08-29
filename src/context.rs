@@ -3,6 +3,7 @@ use std::{fs, path::Path};
 pub type Word = String;
 pub type File = String;
 
+#[derive(Clone)]
 pub struct Context {
     word: Word,
     file: File,
@@ -36,6 +37,10 @@ fn create_context(word: &str, file: &str) -> Context {
 
 pub fn build_context(word: &str, file: Option<&str>, dir: Option<&str>) -> Vec<Context> {
     let mut contexts: Vec<Context> = vec![];
+
+    if word.is_empty() {
+        panic!("Missing word to search");
+    }
 
     if file.is_some() {
         let context = create_context(word, file.unwrap());
