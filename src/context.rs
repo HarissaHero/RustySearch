@@ -28,42 +28,35 @@ impl Context {
     }
 }
 
-pub fn build_context(args: Vec<&str>) -> Vec<Context> {
-    let mut args = args.into_iter();
-    let _ = args.next();
-    let word = args.next().unwrap();
+fn create_context(word: &str, file: &str) -> Context {
+    let context = Context::new(word.to_string(), file.to_string());
+    context.validate();
+    context
+}
+
+pub fn build_context(word: &str, file: Option<&str>, dir: Option<&str>) -> Vec<Context> {
     let mut contexts: Vec<Context> = vec![];
 
-    while args.len() > 0 {
-        let current_arg = args.next().unwrap();
-        match current_arg {
-            "-f" | "--file" => {
-                let file = args.next().unwrap();
-                let context = Context::new(word.to_string(), file.to_string());
-                context.validate();
-                contexts.push(context);
-            }
-            "-d" | "--directory" => {
-                let directory = Path::new(args.next().unwrap());
-                if directory.is_dir() {
-                    let dir_content = fs::read_dir(directory).unwrap();
-                    for entry in dir_content {
-                        let entry = entry.unwrap();
-                        let path = entry.path();
-                        if path.is_file() {
-                            let file = path.to_str().unwrap();
-                            let context = Context::new(word.to_string(), file.to_string());
-                            context.validate();
-                            contexts.push(context);
-                        }
-                    }
-                } else {
-                    panic!("Not a directory");
+    if file.is_some() {
+        let context = create_context(word, file.unwrap());
+        contexts.push(context);
+    }
+
+    if dir.is_some() {
+        let directory = Path::new(dir.unwrap());
+        if directory.is_dir() {
+            let dir_content = fs::read_dir(directory).unwrap();
+            for entry in dir_content {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                if path.is_file() {
+                    let file = path.to_str().unwrap();
+                    let context = create_context(word, file);
+                    contexts.push(context);
                 }
             }
-            _ => {
-                panic!("Unknown argument: {}", current_arg);
-            }
+        } else {
+            panic!("Not a directory");
         }
     }
 
@@ -76,40 +69,14 @@ pub fn build_context(args: Vec<&str>) -> Vec<Context> {
 
 #[test]
 fn test_check_args() {
-    let args = vec!["target/debug/rustysearch", "word", "-f", "file.txt"];
-    let result = build_context(args);
+    let result = build_context("word", Some("file.txt"), None);
     assert_eq!(result[0].word(), "word");
     assert_eq!(result[0].file(), "file.txt");
 }
 
 #[test]
-fn test_check_args_invalid_arg() {
-    let args = vec!["target/debug/rustysearch", "word", "-x", "file.txt"];
-    assert!(std::panic::catch_unwind(|| build_context(args)).is_err());
-}
-
-#[test]
-fn test_check_args_invalid_number_of_args() {
-    let args = vec!["target/debug/rustysearch", "word"];
-    assert!(std::panic::catch_unwind(|| build_context(args)).is_err());
-}
-
-#[test]
-fn test_check_args_invalid_word() {
-    let args = vec!["target/debug/rustysearch", "", "-f", "file.txt"];
-    assert!(std::panic::catch_unwind(|| build_context(args)).is_err());
-}
-
-#[test]
-fn test_check_args_invalid_file() {
-    let args = vec!["target/debug/rustysearch", "word", "-f", ""];
-    assert!(std::panic::catch_unwind(|| build_context(args)).is_err());
-}
-
-#[test]
 fn test_check_args_directory() {
-    let args = vec!["target/debug/rustysearch", "word", "-d", "./test/"];
-    let result = build_context(args);
+    let result = build_context("word", None, Some("./test/"));
 
     assert_eq!(result.len(), 3);
 

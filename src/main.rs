@@ -1,9 +1,17 @@
-use rustysearch::{context::build_context, occurence::display_results, search::search_word};
+use rustysearch::{
+    args::extract_and_process_args, context::build_context, occurence::display_results,
+    search::search_word,
+};
 
 fn main() {
     let timestamp = std::time::Instant::now();
     let args: Vec<String> = std::env::args().collect();
-    let contexts = build_context(args.iter().map(|arg| arg.as_str()).collect());
+    let extracted_arguments = extract_and_process_args(args);
+    let contexts = build_context(
+        &extracted_arguments.word,
+        extracted_arguments.file.as_deref(),
+        extracted_arguments.dir.as_deref(),
+    );
 
     let mut threads = vec![];
 
